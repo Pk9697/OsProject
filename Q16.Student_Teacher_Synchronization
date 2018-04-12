@@ -4,135 +4,108 @@
 #include<unistd.h>
 #include<semaphore.h>
 
-int c=0,a1=0,a2=0,a3=0;
-sem_t x;
-struct sharedtable
+int p=0,x1=0,x2=0,x3=0;
+sem_t a;
+struct stable
 {
 int pen;
-
 int paper;
-
-int qp;
-
+int quespaper;
 };
 
-void *S1(void *p)
+void *S1(void *c)
 {
-sem_wait(&x);
-struct sharedtable *s = (struct sharedtable*)p;
+sem_wait(&a);
+struct stable *s = (struct stable*)c;
 s->pen+=1;
-if(s->pen==0||s->paper==0||s->qp==0)
+if(s->pen==0||s->paper==0||s->quespaper==0)
 {
 	s->pen-=1;
- sem_post(&x);
-
+ sem_post(&a);
 wait();
 }
 else
-
 {
 printf("1st student completed the task\n");
-a1=1;
-c++;
+x1=1;
+p++;
 s->pen=0;
-s->qp=0;
+s->quespaper=0;
 s->paper=0;
-
+}
+sem_post(&a);
 }
 
-sem_post(&x);
-}
 
-void *S2(void *p)
+
+void *S2(void *c)
 { 
-sem_wait(&x);
-
-struct sharedtable *s = (struct sharedtable*)p;
+sem_wait(&a);
+struct stable *s = (struct stable*)c;
 s->paper+=1;
-if(s->pen==0||s->paper==0||s->qp==0) 
-{	s->paper-=1;
-	sem_post(&x);
-	
-	wait();
+if(s->pen==0||s->paper==0||s->quespaper==0) 
+{
+s->paper-=1;
+sem_post(&a);
+wait();
 }
 else
 {
 printf("2nd student completed the task\n");
-a2=1;
-c++;
-s->qp=0;
+x2=1;
+p++;
+s->quespaper=0;
 s->paper=0;
 s->pen=0;
-
+}
+sem_post(&a);
 }
 
-sem_post(&x);
-}
-
-void *S3(void *p)
+void *S3(void *c)
 {
-sem_wait(&x);
-
-struct sharedtable *s = (struct sharedtable*)p;
-s->qp+=1;
-if(s->pen==0||s->paper==0||s->qp==0)
-{	s->qp-=1;
-	sem_post(&x);
-	wait();
+sem_wait(&a);
+struct stable *s = (struct stable*)c;
+s->quespaper+=1;
+if(s->pen==0||s->paper==0||s->quespaper==0)
+{	
+s->quespaper-=1;
+sem_post(&a);
+wait();
 }
 else
 {
 printf("3rd student completed the task\n");
-a3=1;
-c++;
-s->qp=0;
+x3=1;
+p++;
+s->quespaper=0;
 s->pen=0;
 s->paper=0;
 }
-
-sem_post(&x);
-
+sem_post(&a);
 }
 
 void main()
 
 {
-
-sem_init(&x,0,2);
-int a;
-
-pthread_t t1,t2,t3;
-
-struct sharedtable s;
-
+sem_init(&a,0,2);
+int x;
+pthread_t th1,th2,th3;
+struct stable s;
 s.pen=0;
-
 s.paper=0;
+s.quespaper=0;
 
-s.qp=0;
-
-//pthread_create(&t1,NULL,S1,&s);
-
-//pthread_create(&t2,NULL,S2,&s);
-
-//pthread_create(&t3,NULL,S3,&s);
-
-while(c!=3)
-
+while(p!=3)
 {
-
-printf("Enter the things you want to place in the shared table\n")
-;
+printf("Enter the things you want to place in the shared table stable\n");
 printf("Enter 1 for Pen and paper\n");
 
-printf("Enter 2 for pen and qustion paper\n");
+printf("Enter 2 for Pen and question paper\n");
+printf("Enter 3 for Paper and question paper\n");
 
-printf("Enter 3 for paper and question paper\n");
+scanf("%d",&x);
 
-scanf("%d",&a);
-
-switch(a)
-
+switch(x)
 {
 
 case 1:
@@ -150,10 +123,13 @@ case 2:
 {
 
 s.pen=1;
-s.qp=1;
+s.quespaper=1;
 break;
 
 }
+
+
+
 
 
 case 3:
@@ -161,7 +137,7 @@ case 3:
 {
 
 s.paper=1;
-s.qp=1;
+s.quespaper=1;
 break;
 
 }
@@ -169,25 +145,22 @@ default:
 exit(0);
 
 }
-if(a1 != 1)
-pthread_create(&t1,NULL,S1,&s);
-if(a2 != 1)
-pthread_create(&t2,NULL,S2,&s);
-if(a3 != 1)
-pthread_create(&t3,NULL,S3,&s);
+if(x1 != 1)
+pthread_create(&th1,NULL,S1,&s);
+if(x2 != 1)
+pthread_create(&th2,NULL,S2,&s);
+if(x3 != 1)
+pthread_create(&th3,NULL,S3,&s);
 
-if(a1 != 1)
-pthread_join(t1,NULL);
+if(x1 != 1)
+pthread_join(th1,NULL);
 
-if(a2 != 1)
-pthread_join(t2,NULL);
+if(x2 != 1)
+pthread_join(th2,NULL);
 
-if(a3 != 1)
-pthread_join(t3,NULL);
-
-
+if(x3 != 1)
+pthread_join(th3,NULL);
 }
-
 printf("All students completed the task!!!");
-
 }
+
